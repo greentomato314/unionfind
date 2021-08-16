@@ -4,32 +4,32 @@ class UnionFind():
         '''
         unionfind経路圧縮あり,要素にtupleや文字列可,始めに要素数指定なし
         '''
-        self.parents = dict()                                   #{要素:番号,}
-        self.membersf = collections.defaultdict(lambda : set()) #setの中はtupleや文字列可
-        self.rootsf = set()                                     #tupleや文字列可
-        self.d = dict()
-        self.d_inv = dict()
-        self.cnt = 0
+        self.parents = dict()                                      # {子要素:親ID,}
+        self.members_set = collections.defaultdict(lambda : set()) # keyが根でvalueが根に属する要素要素(tupleや文字列可)
+        self.roots_set = set()                                     # 根の集合(tupleや文字列可)
+        self.key_ID = dict()                                       # 各要素にIDを割り振る
+        self.ID_key = dict()                                       # IDから要素名を復元する
+        self.cnt = 0                                               # IDのカウンター
     
-    def dictf(self,x):
-        if x in self.d:
-            return self.d[x]
+    def dictf(self,x): # 要素名とIDをやり取りするところ
+        if x in self.key_ID:
+            return self.key_ID[x]
         else:
             self.cnt += 1
-            self.d[x] = self.cnt
+            self.key_ID[x] = self.cnt
             self.parents[x] = self.cnt
-            self.d_inv[self.cnt] = x
-            self.membersf[x].add(x)
-            self.rootsf.add(x)
-            return self.d[x]
+            self.ID_key[self.cnt] = x
+            self.members_set[x].add(x)
+            self.roots_set.add(x)
+            return self.key_ID[x]
 
     def find(self, x):
-        self.dictf(x)
-        if self.parents[x] == self.dictf(x):
+        ID_x = self.dictf(x)
+        if self.parents[x] == ID_x:
             return x
         else:
-            self.parents[x] = self.d[self.find(self.d_inv[self.parents[x]])]
-            return self.d_inv[self.parents[x]]
+            self.parents[x] = self.key_ID[self.find(self.ID_key[self.parents[x]])]
+            return self.ID_key[self.parents[x]]
 
     def union(self, x, y):
         x = self.find(x)
@@ -38,29 +38,29 @@ class UnionFind():
             x, y = y, x
         if x == y:
             return
-        for i in list(self.membersf[y]):
-            self.membersf[x].add(i)
-        self.membersf[y] = set()
-        self.rootsf.remove(y)
-        self.parents[y] = self.d[x]
+        for i in self.members_set[y]:
+            self.members_set[x].add(i)
+        self.members_set[y] = set()
+        self.roots_set.remove(y)
+        self.parents[y] = self.key_ID[x]
 
     def size(self, x):#xが含まれる集合の要素数
-        return len(self.membersf[self.find(x)])
+        return len(self.members_set[self.find(x)])
 
     def same(self, x, y):#同じ集合に属するかの判定
         return self.find(x) == self.find(y)
 
     def members(self, x):#xを含む集合の要素
-        return self.membersf[self.find(x)]
+        return self.members_set[self.find(x)]
 
     def roots(self):#根の要素
-        return self.rootsf
+        return self.roots_set
 
     def group_count(self):#根の数
-        return len(self.rootsf)
+        return len(self.roots_set)
 
     def all_group_members(self):#根とその要素
-        return {r: self.membersf[r] for r in list(self.rootsf)}
+        return {r: self.members_set[r] for r in self.roots_set}
 
 if __name__=="__main__":
     uf_s = UnionFind()
